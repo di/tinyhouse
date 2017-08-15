@@ -49,10 +49,15 @@ class Formatter(string.Formatter):
 
     def format_field(self, value, spec):
         if spec.startswith('repeat'):
-            template = spec.partition(':')[-1]
+            split = spec.split(':')
+            template = split[2]
+            var_name = split[1]
             if type(value) is dict:
                 value = value.items()
-            return ''.join([template.format(item=item) for item in value])
+            return ''.join(
+                template.format(**dict([(var_name, item)]))
+                for item in value
+            )
         else:
             return super(Formatter, self).format_field(value, spec)
 
