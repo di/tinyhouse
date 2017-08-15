@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import string
 import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -44,35 +45,33 @@ projects = [
 ]
 
 
+class Formatter(string.Formatter):
+
+    def format_field(self, value, spec):
+        if spec.startswith('repeat'):
+            template = spec.partition(':')[-1]
+            if type(value) is dict:
+                value = value.items()
+            return ''.join([template.format(item=item) for item in value])
+        else:
+            return super(Formatter, self).format_field(value, spec)
+
+
+def render_template(template_name, **context):
+    formatter = Formatter()
+    with open('./templates/' + template_name) as template:
+        template_string = template.read()
+    return formatter.format(template_string, **context)
+
+
 @app.route(r'^/$')
 def index():
-    project_link_template = '<a href="/{project_name}/">{project_name}</a><br/>'
-    project_links = '\n'.join(
-        project_link_template.format(project_name=project_name)
-        for project_name in projects
-    )
-    return '''
-<html>
-  <body>
-    {project_links}
-  </body>
-</html>
-'''.format(project_links=project_links)
+    return render_template('index.html', projects=projects)
 
 
 @app.route(r'^/([^/]*)/$')
 def project(project_name):
-    return '''
-<html>
-  <head>
-    <title>Links for {project_name}</title>
-  </head>
-  <body>
-    <h1>Links for {project_name}</h1>
-    <a href="https://files.pythonhosted.org/packages/24/71/30c44bcfed678298cc0054fad03d2fb9dd5cb0635aaeb4085eb15c28f17c/blahblahblahblah3-13.13.13.tar.gz#sha256=673763d1cb12caffb29d50f24c2480457e1917a79168e371a3ada7b1403304b5">blahblahblahblah3-13.13.13.tar.gz</a><br>
-  </body>
-</html>
-'''.format(project_name=project_name)
+    return render_template('project.html', project_name=project_name)
 
 
 app.run('0.0.0.0', 8000)
