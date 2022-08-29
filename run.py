@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from server import Server, render_template
-from s3 import S3Backend
+from storage.s3 import S3Backend
 
 BUCKET_NAME = 'tinyhousebucket'
 
